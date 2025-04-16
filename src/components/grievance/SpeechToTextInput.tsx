@@ -9,13 +9,48 @@ interface SpeechToTextInputProps {
   initialValue?: string;
 }
 
+// Define types for browser-specific SpeechRecognition
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: {
+    [index: number]: {
+      isFinal: boolean;
+      [index: number]: {
+        transcript: string;
+      };
+    };
+  };
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
+interface SpeechRecognitionInstance extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onend: () => void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognitionInstance;
+    webkitSpeechRecognition: new () => SpeechRecognitionInstance;
+  }
+}
+
 const SpeechToTextInput: React.FC<SpeechToTextInputProps> = ({ 
   onTranscriptChange, 
   initialValue = ''
 }) => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState(initialValue);
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [recognition, setRecognition] = useState<SpeechRecognitionInstance | null>(null);
   const [isSupported, setIsSupported] = useState(true);
   const { toast } = useToast();
 
@@ -146,11 +181,3 @@ const SpeechToTextInput: React.FC<SpeechToTextInputProps> = ({
 };
 
 export default SpeechToTextInput;
-
-// Add necessary type declarations for older browsers
-declare global {
-  interface Window {
-    webkitSpeechRecognition: any;
-    SpeechRecognition: any;
-  }
-}

@@ -1,5 +1,3 @@
-
-// This is a new file to update the GrievanceForm component
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -18,7 +16,7 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import SpeechToTextInput from '@/components/grievance/SpeechToTextInput';
-import { FileUpload, FilePlus, AlertCircle, SendHorizontal } from 'lucide-react';
+import { Upload, FilePlus, AlertCircle, SendHorizontal } from 'lucide-react';
 
 // The form schema
 const formSchema = z.object({
@@ -248,7 +246,7 @@ const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSubmit, isSubmitting })
             <p className="text-sm text-gray-500">{t('drag_drop_files')}</p>
             <p className="text-xs text-gray-400 mt-1">{t('max_file_size')}</p>
             <Button type="button" variant="outline" size="sm" className="mt-2">
-              <FileUpload className="h-4 w-4 mr-2" />
+              <Upload className="h-4 w-4 mr-2" />
               {t('browse_files')}
             </Button>
           </div>

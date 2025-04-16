@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,7 @@ import Footer from '@/components/layout/Footer';
 const Register = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -36,6 +38,13 @@ const Register = () => {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -101,23 +110,17 @@ const Register = () => {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call - this would be replaced with actual registration
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast({
-        title: "Registration Successful",
-        description: "Welcome to Nyay Sathi Seva Portal. You can now login with your credentials.",
-        variant: "default",
+      await register({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
       });
       
-      // Redirect to login
-      navigate('/login');
+      // navigate to login happens in the register function
     } catch (error) {
-      toast({
-        title: "Registration Failed",
-        description: "There was an error during registration. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Registration error:', error);
+      // Error toast is already shown in the register function
     } finally {
       setIsSubmitting(false);
     }

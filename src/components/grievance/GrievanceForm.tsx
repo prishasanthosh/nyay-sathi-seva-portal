@@ -1,193 +1,276 @@
 
-import React from 'react';
+// This is a new file to update the GrievanceForm component
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useAuth } from '@/contexts/AuthContext';
+import SpeechToTextInput from '@/components/grievance/SpeechToTextInput';
+import { FileUpload, FilePlus, AlertCircle, SendHorizontal } from 'lucide-react';
 
-// Form schema
+// The form schema
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  phone: z.string().min(10, {
-    message: "Phone number must be at least 10 digits.",
-  }),
-  subject: z.string().min(5, {
-    message: "Subject must be at least 5 characters.",
-  }),
-  description: z.string().min(20, {
-    message: "Description must be at least 20 characters.",
-  }),
-  incidentDate: z.date().optional(),
+  subject: z.string().min(10, 'Subject must be at least 10 characters'),
+  description: z.string().min(50, 'Description must be at least 50 characters'),
+  category: z.string().min(1, 'Please select a category'),
+  state: z.string().min(1, 'Please select a state'),
+  district: z.string().min(1, 'Please select a district'),
+  address: z.string().optional(),
+  attachments: z.any().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 interface GrievanceFormProps {
-  onSubmit: (data: FormValues) => void;
+  onSubmit: (data: any) => void;
   isSubmitting: boolean;
 }
 
-const GrievanceForm: React.FC<GrievanceFormProps> = ({ 
-  onSubmit, 
-  isSubmitting 
-}) => {
-  const { t, language } = useLanguage();
+const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSubmit, isSubmitting }) => {
+  const { t } = useLanguage();
+  const { user } = useAuth();
+  const [usingSpeechToText, setUsingSpeechToText] = useState(false);
   
-  const form = useForm<FormValues>({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      subject: "",
-      description: "",
-    },
+      subject: '',
+      description: '',
+      category: '',
+      state: '',
+      district: '',
+      address: '',
+    }
   });
   
+  const description = watch('description');
+  
+  const handleSpeechTranscript = (transcript: string) => {
+    setValue('description', transcript, { shouldValidate: true });
+  };
+  
+  const submitForm = (data: FormValues) => {
+    // Include the user ID with the form data
+    const formData = {
+      ...data,
+      userId: user?._id,
+    };
+    
+    onSubmit(formData);
+  };
+  
+  // Lists of states and categories
+  const categories = [
+    'Water Supply', 
+    'Electricity', 
+    'Roads', 
+    'Sanitation', 
+    'Public Transport', 
+    'Education', 
+    'Healthcare', 
+    'Law & Order', 
+    'Housing', 
+    'Others'
+  ];
+  
+  const states = [
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 
+    'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 
+    'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 
+    'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 
+    'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 
+    'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+  ];
+  
+  // Districts would be dynamic based on state in a real implementation
+  const districts = ['District 1', 'District 2', 'District 3', 'District 4', 'District 5'];
+  
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('name')}</FormLabel>
-                <FormControl>
-                  <Input placeholder={t('enter_name')} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+    <form onSubmit={handleSubmit(submitForm)} className="space-y-6">
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="category">{t('category')} <span className="text-red-500">*</span></Label>
+          <Select 
+            onValueChange={(value) => setValue('category', value, { shouldValidate: true })} 
+            defaultValue=""
+          >
+            <SelectTrigger id="category" className={errors.category ? "border-red-500" : ""}>
+              <SelectValue placeholder={t('select_category')} />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.category && (
+            <p className="text-red-500 text-sm flex items-center mt-1">
+              <AlertCircle className="h-4 w-4 mr-1" /> 
+              {errors.category.message}
+            </p>
+          )}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="subject">{t('subject')} <span className="text-red-500">*</span></Label>
+          <Input
+            id="subject"
+            placeholder={t('grievance_subject_placeholder')}
+            className={errors.subject ? "border-red-500" : ""}
+            {...register('subject')}
           />
+          {errors.subject && (
+            <p className="text-red-500 text-sm flex items-center mt-1">
+              <AlertCircle className="h-4 w-4 mr-1" /> 
+              {errors.subject.message}
+            </p>
+          )}
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label htmlFor="description">{t('description')} <span className="text-red-500">*</span></Label>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={() => setUsingSpeechToText(!usingSpeechToText)}
+              className="text-xs flex items-center"
+            >
+              {usingSpeechToText ? "Hide Voice Input" : "Use Voice Input"}
+            </Button>
+          </div>
           
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('email')}</FormLabel>
-                <FormControl>
-                  <Input placeholder={t('enter_email')} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+          {usingSpeechToText && (
+            <SpeechToTextInput 
+              onTranscriptChange={handleSpeechTranscript} 
+              initialValue={description}
+            />
+          )}
+          
+          <Textarea
+            id="description"
+            placeholder={t('grievance_description_placeholder')}
+            className={`min-h-[150px] ${errors.description ? "border-red-500" : ""}`}
+            {...register('description')}
           />
-          
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('phone')}</FormLabel>
-                <FormControl>
-                  <Input placeholder={t('enter_phone')} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="flex justify-between items-center text-xs text-gray-500">
+            <span>{description?.length || 0} characters (minimum 50)</span>
+          </div>
+          {errors.description && (
+            <p className="text-red-500 text-sm flex items-center mt-1">
+              <AlertCircle className="h-4 w-4 mr-1" /> 
+              {errors.description.message}
+            </p>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="state">{t('state')} <span className="text-red-500">*</span></Label>
+            <Select 
+              onValueChange={(value) => setValue('state', value, { shouldValidate: true })} 
+              defaultValue=""
+            >
+              <SelectTrigger id="state" className={errors.state ? "border-red-500" : ""}>
+                <SelectValue placeholder={t('select_state')} />
+              </SelectTrigger>
+              <SelectContent>
+                {states.map((state) => (
+                  <SelectItem key={state} value={state}>
+                    {state}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.state && (
+              <p className="text-red-500 text-sm flex items-center mt-1">
+                <AlertCircle className="h-4 w-4 mr-1" /> 
+                {errors.state.message}
+              </p>
             )}
-          />
+          </div>
           
-          <FormField
-            control={form.control}
-            name="incidentDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Incident Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={`w-full pl-3 text-left font-normal ${!field.value ? "text-muted-foreground" : ""}`}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Select date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) => date > new Date()}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
+          <div className="space-y-2">
+            <Label htmlFor="district">{t('district')} <span className="text-red-500">*</span></Label>
+            <Select 
+              onValueChange={(value) => setValue('district', value, { shouldValidate: true })} 
+              defaultValue=""
+            >
+              <SelectTrigger id="district" className={errors.district ? "border-red-500" : ""}>
+                <SelectValue placeholder={t('select_district')} />
+              </SelectTrigger>
+              <SelectContent>
+                {districts.map((district) => (
+                  <SelectItem key={district} value={district}>
+                    {district}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.district && (
+              <p className="text-red-500 text-sm flex items-center mt-1">
+                <AlertCircle className="h-4 w-4 mr-1" /> 
+                {errors.district.message}
+              </p>
             )}
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="address">{t('address')} ({t('optional')})</Label>
+          <Textarea
+            id="address"
+            placeholder={t('address_placeholder')}
+            className="min-h-[80px]"
+            {...register('address')}
           />
         </div>
         
-        <FormField
-          control={form.control}
-          name="subject"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('subject')}</FormLabel>
-              <FormControl>
-                <Input placeholder={t('subject')} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('description')}</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder={t('describe_grievance')} 
-                  className="min-h-[150px]" 
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {t('analyze_and_submit')}
-          </Button>
+        <div className="space-y-2">
+          <Label>{t('attachments')} ({t('optional')})</Label>
+          <div className="border-2 border-dashed rounded-md p-6 text-center">
+            <FilePlus className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+            <p className="text-sm text-gray-500">{t('drag_drop_files')}</p>
+            <p className="text-xs text-gray-400 mt-1">{t('max_file_size')}</p>
+            <Button type="button" variant="outline" size="sm" className="mt-2">
+              <FileUpload className="h-4 w-4 mr-2" />
+              {t('browse_files')}
+            </Button>
+          </div>
         </div>
-      </form>
-    </Form>
+      </div>
+
+      <div className="flex justify-end">
+        <Button type="submit" disabled={isSubmitting} className="min-w-[150px]">
+          {isSubmitting ? (
+            <>
+              <span className="animate-spin mr-2">●</span>
+              {t('submitting')}...
+            </>
+          ) : (
+            <>
+              <SendHorizontal className="h-4 w-4 mr-2" />
+              {t('analyze_grievance')}
+            </>
+          )}
+        </Button>
+      </div>
+    </form>
   );
 };
 

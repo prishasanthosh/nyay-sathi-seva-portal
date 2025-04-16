@@ -1,18 +1,32 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Menu, X, Globe, ChevronDown } from 'lucide-react';
+import {
+  Menu,
+  X,
+  Globe,
+  ChevronDown,
+  User,
+  LogOut,
+  FileText,
+  Search,
+  BarChart,
+} from 'lucide-react';
 
 const Header: React.FC = () => {
   const { t, language, setLanguage } = useLanguage();
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const languages = [
@@ -27,6 +41,11 @@ const Header: React.FC = () => {
 
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
   return (
@@ -49,15 +68,24 @@ const Header: React.FC = () => {
             <Link to="/" className="text-gray-700 hover:text-india-saffron px-3 py-2 rounded-md text-sm font-medium">
               {t('home')}
             </Link>
-            <Link to="/grievances" className="text-gray-700 hover:text-india-saffron px-3 py-2 rounded-md text-sm font-medium">
-              {t('grievances')}
-            </Link>
-            <Link to="/dashboard" className="text-gray-700 hover:text-india-saffron px-3 py-2 rounded-md text-sm font-medium">
-              {t('dashboard')}
-            </Link>
-            <Link to="/about" className="text-gray-700 hover:text-india-saffron px-3 py-2 rounded-md text-sm font-medium">
-              {t('about')}
-            </Link>
+            
+            {isAuthenticated ? (
+              <>
+                <Link to="/grievances/new" className="text-gray-700 hover:text-india-saffron px-3 py-2 rounded-md text-sm font-medium">
+                  {t('file_grievance')}
+                </Link>
+                <Link to="/grievances/track" className="text-gray-700 hover:text-india-saffron px-3 py-2 rounded-md text-sm font-medium">
+                  {t('track_grievance')}
+                </Link>
+                <Link to="/dashboard" className="text-gray-700 hover:text-india-saffron px-3 py-2 rounded-md text-sm font-medium">
+                  {t('dashboard')}
+                </Link>
+              </>
+            ) : (
+              <Link to="/about" className="text-gray-700 hover:text-india-saffron px-3 py-2 rounded-md text-sm font-medium">
+                {t('about')}
+              </Link>
+            )}
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -80,16 +108,49 @@ const Header: React.FC = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Link to="/login">
-              <Button variant="outline" size="sm" className="ml-2">
-                {t('login')}
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button className="ml-2" size="sm">
-                {t('register')}
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                    <User className="h-4 w-4" />
+                    <span>{user?.name || 'User'}</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate('/grievances/new')}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    {t('file_grievance')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/grievances/track')}>
+                    <Search className="h-4 w-4 mr-2" />
+                    {t('track_grievance')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                    <BarChart className="h-4 w-4 mr-2" />
+                    {t('dashboard')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    {t('logout')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="outline" size="sm" className="ml-2">
+                    {t('login')}
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button className="ml-2" size="sm">
+                    {t('register')}
+                  </Button>
+                </Link>
+              </>
+            )}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -138,39 +199,66 @@ const Header: React.FC = () => {
             >
               {t('home')}
             </Link>
-            <Link
-              to="/grievances"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-india-saffron"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {t('grievances')}
-            </Link>
-            <Link
-              to="/dashboard"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-india-saffron"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {t('dashboard')}
-            </Link>
-            <Link
-              to="/about"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-india-saffron"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {t('about')}
-            </Link>
-            <div className="flex flex-col space-y-2 mt-3 px-3">
-              <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="outline" className="w-full">
-                  {t('login')}
-                </Button>
-              </Link>
-              <Link to="/register" onClick={() => setIsMenuOpen(false)}>
-                <Button className="w-full">
-                  {t('register')}
-                </Button>
-              </Link>
-            </div>
+            
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to="/grievances/new"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-india-saffron"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {t('file_grievance')}
+                </Link>
+                <Link
+                  to="/grievances/track"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-india-saffron"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {t('track_grievance')}
+                </Link>
+                <Link
+                  to="/dashboard"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-india-saffron"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {t('dashboard')}
+                </Link>
+                <div className="border-t border-gray-200 my-2 py-2">
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut className="h-4 w-4 mr-2 inline-block" />
+                    {t('logout')}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/about"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-india-saffron"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {t('about')}
+                </Link>
+                <div className="flex flex-col space-y-2 mt-3 px-3">
+                  <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="outline" className="w-full">
+                      {t('login')}
+                    </Button>
+                  </Link>
+                  <Link to="/register" onClick={() => setIsMenuOpen(false)}>
+                    <Button className="w-full">
+                      {t('register')}
+                    </Button>
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

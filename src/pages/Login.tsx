@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,13 +24,23 @@ import Footer from '@/components/layout/Footer';
 const Login = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const from = (location.state as any)?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location]);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -59,23 +70,14 @@ const Login = () => {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call - this would be replaced with actual authentication
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await login(email, password);
       
-      toast({
-        title: "Login Successful",
-        description: "Welcome back to Nyay Sathi Seva Portal",
-        variant: "default",
-      });
-      
-      // Redirect to dashboard
-      navigate('/dashboard');
+      // Redirect to the page they were trying to access, or dashboard as fallback
+      const from = (location.state as any)?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
     } catch (error) {
-      toast({
-        title: "Login Failed",
-        description: "Invalid email or password. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Login error:', error);
+      // Error toast is already shown in the login function
     } finally {
       setIsSubmitting(false);
     }

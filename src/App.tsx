@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import NewGrievance from "./pages/NewGrievance";
@@ -22,20 +24,38 @@ const App = () => (
     <BrowserRouter>
       <TooltipProvider>
         <LanguageProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/grievances/new" element={<NewGrievance />} />
-            <Route path="/grievances/success" element={<GrievanceSuccess />} />
-            <Route path="/grievances/track" element={<TrackGrievance />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AuthProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/grievances/new" element={
+                <ProtectedRoute>
+                  <NewGrievance />
+                </ProtectedRoute>
+              } />
+              <Route path="/grievances/success" element={
+                <ProtectedRoute>
+                  <GrievanceSuccess />
+                </ProtectedRoute>
+              } />
+              <Route path="/grievances/track" element={
+                <ProtectedRoute>
+                  <TrackGrievance />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/about" element={<About />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
         </LanguageProvider>
       </TooltipProvider>
     </BrowserRouter>

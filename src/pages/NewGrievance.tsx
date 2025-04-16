@@ -79,7 +79,7 @@ const NewGrievance = () => {
           {showAnalysisResults ? (
             <GrievanceAnalysisResult
               analysis={nlpAnalysis}
-              onSubmit={handleSubmitGrievance}
+              onSubmit={() => handleSubmitGrievance({})}
               onBack={() => setShowAnalysisResults(false)}
               isSubmitting={isSubmitting}
             />

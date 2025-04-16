@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 // Available languages
@@ -148,7 +147,7 @@ const translations: TranslationDict = {
   'resolved': {
     en: 'Resolved',
     hi: 'हल किया गया',
-    ta: 'தீர்க்கப்பட்டது',
+    ta: 'தீர்க்கபட்டது',
   },
   'rejected': {
     en: 'Rejected',
@@ -267,7 +266,54 @@ const translations: TranslationDict = {
     en: 'Describe your grievance in detail',
     hi: 'अपनी शिकायत का विस्तार से वर्णन करें',
     ta: 'உங்கள் குறையை விரிவாக விவரிக்கவும்',
-  }
+  },
+  
+  // NLP & Grievance Analysis
+  'analyze_and_submit': {
+    en: 'Analyze & Submit',
+    hi: 'विश्लेषण करें और जमा करें',
+    ta: 'பகுப்பாய்வு & சமர்ப்பிக்க',
+  },
+  'file_grievance_description': {
+    en: 'Submit your complaint and our system will automatically route it to the right department.',
+    hi: 'अपनी शिकायत दर्ज करें और हमारा सिस्टम स्वचालित रूप से इसे सही विभाग में भेज देगा।',
+    ta: 'உங்கள் புகாரைச் சமர்ப்பிக்கவும், எங்கள் அமைப்பு தானாகவே அதை சரியான துறைக்கு வழிநடத்தும்.',
+  },
+  'grievance_submitted': {
+    en: 'Your grievance has been submitted successfully.',
+    hi: 'आपकी शिकायत सफलतापूर्वक दर्ज कर ली गई है।',
+    ta: 'உங்கள் குறை வெற்றிகரமாக சமர்ப்பிக்கப்பட்டது.',
+  },
+  'success': {
+    en: 'Success',
+    hi: 'सफलता',
+    ta: 'வெற்றி',
+  },
+  'error': {
+    en: 'Error',
+    hi: 'त्रुटि',
+    ta: 'பிழை',
+  },
+  'error_analyzing': {
+    en: 'Error analyzing your grievance. Please try again.',
+    hi: 'आपकी शिकायत का विश्लेषण करने में त्रुटि। कृपया पुनः प्रयास करें।',
+    ta: 'உங்கள் குறையை பகுப்பாய்வு செய்வதில் பிழை. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.',
+  },
+  'error_submitting': {
+    en: 'Error submitting your grievance. Please try again.',
+    hi: 'आपकी शिकायत जमा करने में त्रुटि। कृपया पुनः प्रयास करें।',
+    ta: 'உங்கள் குறையைச் சமர்ப்பிப்பதில் பிழை. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.',
+  },
+  'incident_date': {
+    en: 'Incident Date',
+    hi: 'घटना की तारीख',
+    ta: 'சம்பவ தேதி',
+  },
+  'select_date': {
+    en: 'Select date',
+    hi: 'तारीख़ चुनें',
+    ta: 'தேதியைத் தேர்ந்தெடுக்கவும்',
+  },
 };
 
 // Context type

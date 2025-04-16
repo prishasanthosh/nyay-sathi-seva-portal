@@ -24,13 +24,12 @@ export {
   findSimilarComplaints,
   
   // Types
-  export type SentimentResult,
-  export type ClassificationResult,
-  export type Department,
-  export type LanguageDetectionResult,
-  export type TranslationResult,
-  export type SupportedLanguage,
-  export type ComplaintSummary,
-  export type SimilarityResult
+  SentimentResult,
+  ClassificationResult,
+  Department,
+  LanguageDetectionResult,
+  TranslationResult,
+  SupportedLanguage,
+  ComplaintSummary,
+  SimilarityResult
 };
-

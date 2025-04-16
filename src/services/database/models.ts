@@ -40,7 +40,7 @@ const AttachmentSchema = new Schema<IAttachment>({
 
 // Comment Schema
 const CommentSchema = new Schema<IComment>({
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  userId: { type: String, required: true },
   userRole: { 
     type: String, 
     enum: ['citizen', 'department_admin', 'super_admin'], 
@@ -57,7 +57,7 @@ const StatusUpdateSchema = new Schema<IStatusUpdate>({
     enum: ['pending', 'in_progress', 'resolved', 'rejected'], 
     required: true 
   },
-  updatedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  updatedBy: { type: String, required: true },
   updatedByRole: { 
     type: String, 
     enum: ['department_admin', 'super_admin'], 
@@ -70,7 +70,7 @@ const StatusUpdateSchema = new Schema<IStatusUpdate>({
 // Grievance Schema
 const GrievanceSchema = new Schema<IGrievance>({
   trackingId: { type: String, required: true, unique: true },
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  userId: { type: String, required: true },
   subject: { type: String, required: true },
   description: { type: String, required: true },
   originalLanguage: { type: String, required: true }, // 'en', 'hi', 'ta'
@@ -95,7 +95,7 @@ const GrievanceSchema = new Schema<IGrievance>({
     enum: ['pending', 'in_progress', 'resolved', 'rejected'], 
     default: 'pending' 
   },
-  assignedTo: { type: Schema.Types.ObjectId, ref: 'User' },
+  assignedTo: { type: String },
   
   attachments: [AttachmentSchema],
   
@@ -114,7 +114,7 @@ const DepartmentSchema = new Schema<IDepartment>({
   description: { type: String, required: true },
   contactEmail: { type: String, required: true },
   contactPhone: { type: String },
-  adminUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  adminUsers: [{ type: String }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
@@ -156,12 +156,19 @@ const AnalyticsSchema = new Schema<IAnalytics>({
 
 // Create models if mongoose is available
 export const getModels = () => {
-  const models = {
-    User: mongoose.models.User || mongoose.model<IUser & Document>('User', UserSchema),
-    Grievance: mongoose.models.Grievance || mongoose.model<IGrievance & Document>('Grievance', GrievanceSchema),
-    Department: mongoose.models.Department || mongoose.model<IDepartment & Document>('Department', DepartmentSchema),
-    Analytics: mongoose.models.Analytics || mongoose.model<IAnalytics & Document>('Analytics', AnalyticsSchema)
-  };
+  if (!mongoose.models) {
+    return null;
+  }
   
-  return models;
+  try {
+    return {
+      User: mongoose.models.User || mongoose.model('User', UserSchema),
+      Grievance: mongoose.models.Grievance || mongoose.model('Grievance', GrievanceSchema),
+      Department: mongoose.models.Department || mongoose.model('Department', DepartmentSchema),
+      Analytics: mongoose.models.Analytics || mongoose.model('Analytics', AnalyticsSchema)
+    };
+  } catch (error) {
+    console.error('Error creating Mongoose models:', error);
+    return null;
+  }
 };

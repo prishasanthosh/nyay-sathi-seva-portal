@@ -17,11 +17,13 @@ const NewGrievance = () => {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAnalysisResults, setShowAnalysisResults] = useState(false);
+  const [formData, setFormData] = useState<any>({});
   
-  const handleAnalyzeComplaint = async (formData: any) => {
+  const handleAnalyzeComplaint = async (data: any) => {
     try {
       setIsSubmitting(true);
-      const results = await nlpAnalysis.analyzeComplaint(formData.description);
+      setFormData(data);
+      const results = await nlpAnalysis.analyzeComplaint(data.description);
       setShowAnalysisResults(true);
       setIsSubmitting(false);
     } catch (error) {
@@ -35,7 +37,7 @@ const NewGrievance = () => {
     }
   };
   
-  const handleSubmitGrievance = async (formData: any) => {
+  const handleSubmitGrievance = async () => {
     try {
       setIsSubmitting(true);
       
@@ -79,7 +81,7 @@ const NewGrievance = () => {
           {showAnalysisResults ? (
             <GrievanceAnalysisResult
               analysis={nlpAnalysis}
-              onSubmit={() => handleSubmitGrievance({})}
+              onSubmit={handleSubmitGrievance}
               onBack={() => setShowAnalysisResults(false)}
               isSubmitting={isSubmitting}
             />

@@ -1,29 +1,32 @@
 
 // NLP Service main export file
-import { analyzeSentiment, SentimentResult } from './sentimentAnalysis';
-import { classifyComplaint, ClassificationResult, Department } from './complaintClassification';
-import { 
-  detectLanguage, 
-  translateText, 
+import { analyzeSentiment } from './sentimentAnalysis';
+import type { SentimentResult } from './sentimentAnalysis';
+import { classifyComplaint } from './complaintClassification';
+import type { ClassificationResult, Department } from './complaintClassification';
+import { detectLanguage, translateText } from './translationService';
+import type { 
   LanguageDetectionResult, 
   TranslationResult, 
   SupportedLanguage 
 } from './translationService';
-import { 
-  findSimilarComplaints, 
+import { findSimilarComplaints } from './similarityDetection';
+import type { 
   ComplaintSummary, 
   SimilarityResult 
 } from './similarityDetection';
 
+// Export the functions
 export {
-  // Functions
   analyzeSentiment,
   classifyComplaint,
   detectLanguage,
   translateText,
   findSimilarComplaints,
-  
-  // Types
+};
+
+// Export the types
+export type {
   SentimentResult,
   ClassificationResult,
   Department,

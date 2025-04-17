@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { authAPI } from '@/services/api';
 
 export interface User {
   _id: string;
@@ -9,6 +10,8 @@ export interface User {
   email: string;
   role: 'citizen' | 'department_admin' | 'super_admin';
   department?: string;
+  state?: string;
+  district?: string;
 }
 
 interface AuthContextType {
@@ -26,6 +29,9 @@ interface RegisterData {
   email: string;
   phone: string;
   password: string;
+  state?: string;
+  district?: string;
+  address?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,15 +58,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       
-      // Check if user is stored in localStorage
-      const storedUser = localStorage.getItem('user');
+      // Check if token exists in localStorage
+      const token = localStorage.getItem('token');
       
-      if (storedUser) {
-        // In a real app, you would verify the token with your backend
-        setUser(JSON.parse(storedUser));
+      if (token) {
+        // Fetch user profile from the server
+        const userData = await authAPI.getProfile();
+        setUser(userData);
+      } else {
+        // No token, user is not authenticated
+        setUser(null);
       }
     } catch (error) {
       console.error('Authentication check failed:', error);
+      localStorage.removeItem('token');
       localStorage.removeItem('user');
       setUser(null);
     } finally {
@@ -72,30 +83,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       
-      // For demo purposes, simulating API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await authAPI.login({ email, password });
       
-      // In a real app, this would be an API call to your backend
-      if (email && password) {
-        // Mock user for demo (replace with actual API call)
-        const mockUser: User = {
-          _id: 'user_' + Math.random().toString(36).substr(2, 9),
-          name: email.split('@')[0],
-          email,
-          role: 'citizen',
-        };
-        
-        // Store user in localStorage
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        
-        setUser(mockUser);
-        toast({
-          title: "Login Successful",
-          description: "Welcome back to Nyay Sathi Seva Portal",
-        });
-      } else {
-        throw new Error('Invalid credentials');
-      }
+      // Save token and user data in localStorage
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      setUser(response.user);
+      
+      toast({
+        title: "Login Successful",
+        description: "Welcome back to Nyay Sathi Seva Portal",
+      });
+      
+      navigate('/dashboard');
     } catch (error) {
       console.error('Login failed:', error);
       toast({
@@ -113,21 +114,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       
-      // For demo purposes, simulating API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await authAPI.register(userData);
       
-      // In a real app, this would be an API call to your backend
-      if (userData.email && userData.password) {
-        toast({
-          title: "Registration Successful",
-          description: "Welcome to Nyay Sathi Seva Portal. You can now login with your credentials.",
-        });
-        
-        // Redirect to login
-        navigate('/login');
-      } else {
-        throw new Error('Invalid registration data');
-      }
+      // Save token and user data in localStorage
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      setUser(response.user);
+      
+      toast({
+        title: "Registration Successful",
+        description: "Welcome to Nyay Sathi Seva Portal.",
+      });
+      
+      navigate('/dashboard');
     } catch (error) {
       console.error('Registration failed:', error);
       toast({
@@ -142,6 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
     toast({

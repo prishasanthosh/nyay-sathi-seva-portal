@@ -1,5 +1,4 @@
 
-// This file would be used in a backend/server environment
 const mongoose = require('mongoose');
 
 // Connection URI from environment variable

@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNlpAnalysis } from '@/hooks/useNlpAnalysis';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { grievanceAPI } from '@/services/api';
 import GrievanceForm from '@/components/grievance/GrievanceForm';
 import GrievanceAnalysisResult from '@/components/grievance/GrievanceAnalysisResult';
 import PageHeader from '@/components/grievance/PageHeader';
@@ -13,6 +15,7 @@ const NewGrievance = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const nlpAnalysis = useNlpAnalysis();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,6 +26,13 @@ const NewGrievance = () => {
     try {
       setIsSubmitting(true);
       setFormData(data);
+      
+      // Include the user data with the form data
+      const completeFormData = {
+        ...data,
+        userId: user?._id,
+      };
+      
       const results = await nlpAnalysis.analyzeComplaint(data.description);
       setShowAnalysisResults(true);
       setIsSubmitting(false);
@@ -41,9 +51,18 @@ const NewGrievance = () => {
     try {
       setIsSubmitting(true);
       
-      // In a real implementation, this would submit to the backend
-      console.log('Submitting grievance:', formData);
-      console.log('NLP analysis results:', nlpAnalysis);
+      // Prepare data for submission to backend
+      const grievanceData = {
+        ...formData,
+        department: nlpAnalysis.classification?.department || 'general',
+        urgency: nlpAnalysis.sentiment?.urgency || 'medium',
+        sentimentScore: nlpAnalysis.sentiment?.score || 0,
+        confidenceScore: nlpAnalysis.classification?.confidence || 0,
+        tags: nlpAnalysis.classification?.tags || [],
+      };
+      
+      // Submit grievance to backend
+      const response = await grievanceAPI.submitGrievance(grievanceData);
       
       // Success notification
       toast({
@@ -54,8 +73,8 @@ const NewGrievance = () => {
       // Navigate to success page
       navigate('/grievances/success', { 
         state: { 
-          trackingId: 'GR' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0'),
-          department: nlpAnalysis.classification?.department || 'general'
+          trackingId: response.trackingId,
+          department: response.grievance.department
         }
       });
     } catch (error) {

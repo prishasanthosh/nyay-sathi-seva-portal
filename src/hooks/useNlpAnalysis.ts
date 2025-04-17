@@ -1,12 +1,5 @@
-
 import { useState } from 'react';
-import { 
-  analyzeSentiment, 
-  classifyComplaint, 
-  detectLanguage, 
-  translateText, 
-  findSimilarComplaints 
-} from '@/services/nlp';
+import { grievanceAPI } from '@/services/api';
 import type { 
   SentimentResult, 
   ClassificationResult, 
@@ -14,6 +7,13 @@ import type {
   TranslationResult,
   ComplaintSummary,
   SimilarityResult
+} from '@/services/nlp';
+import {
+  analyzeSentiment,
+  classifyComplaint,
+  detectLanguage,
+  translateText,
+  findSimilarComplaints,
 } from '@/services/nlp';
 
 type NlpAnalysisState = {
@@ -31,6 +31,7 @@ type NlpAnalysisResult = NlpAnalysisState & {
 
 /**
  * Hook for analyzing complaint text using NLP services
+ * Now integrated with backend API
  */
 export const useNlpAnalysis = () => {
   const [state, setState] = useState<NlpAnalysisState>({
@@ -38,7 +39,7 @@ export const useNlpAnalysis = () => {
   });
 
   /**
-   * Analyze complaint text using all NLP services
+   * Analyze complaint text using all NLP services (now via the backend)
    */
   const analyzeComplaint = async (
     text: string, 
@@ -47,7 +48,35 @@ export const useNlpAnalysis = () => {
     try {
       setState(prev => ({ ...prev, isAnalyzing: true }));
       
-      // 1. Detect language first
+      // For now, use the frontend implementation as the backend integration
+      // is not complete. In a real project, this would call the backend API.
+      const response = await fetch('/api/analyze-complaint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text, existingComplaints }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to analyze complaint');
+      }
+      
+      const data = await response.json();
+      
+      const result = {
+        isAnalyzing: false,
+        ...data
+      };
+      
+      setState(result);
+      return result;
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error during NLP analysis';
+      console.error('Error in NLP analysis:', error);
+      
+      // Fallback to frontend implementation
+      // This would be removed in a real project where the backend is fully implemented
       const languageDetection = await detectLanguage(text);
       
       // 2. Translate to English if needed
@@ -80,13 +109,7 @@ export const useNlpAnalysis = () => {
         translation,
         similarity
       };
-      
-      setState(result);
-      return result;
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error during NLP analysis';
-      console.error('Error in NLP analysis:', error);
-      
+
       setState(prev => ({ ...prev, isAnalyzing: false }));
       return { ...state, isAnalyzing: false, error: errorMsg };
     }

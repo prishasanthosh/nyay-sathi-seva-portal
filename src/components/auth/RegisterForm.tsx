@@ -43,8 +43,16 @@ const RegisterForm: React.FC = () => {
   
   const onSubmit = async (data: RegisterFormValues) => {
     try {
-      // Remove confirmPassword before sending to API
-      const { confirmPassword, ...userData } = data;
+      // Explicitly create an object with required properties
+      const userData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+        state: data.state,
+        district: data.district
+      };
+      
       await registerUser(userData);
     } catch (error) {
       console.error('Registration error:', error);

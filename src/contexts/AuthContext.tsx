@@ -25,12 +25,12 @@ interface AuthContextType {
 }
 
 interface RegisterData {
-  name: string;
+  name: string;  // Make this required
   email: string;
   phone: string;
   password: string;
-  state?: string;
-  district?: string;
+  state: string;
+  district: string;
   address?: string;
 }
 
